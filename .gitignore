@@ -1,1 +1,8 @@
 __pycache__
+
+# Model files
+# *.pb
+# *.tflite
+
+# Data
+*.npy
