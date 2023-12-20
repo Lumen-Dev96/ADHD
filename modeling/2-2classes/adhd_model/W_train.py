@@ -15,10 +15,10 @@ channels = 12
 epochs = 10 #5
 
 # 结果路径
-result_path = 'hongmin_new/two/result/1218/1024/'
+result_path = './result/'
 
 #数据路径
-npy_path = '/home/mqiu/hongmin_new/two/npy/window_size100_1/'
+npy_path = './data/'
 
 # train
 X_train = np.load(npy_path + 'X_train_2.npy')

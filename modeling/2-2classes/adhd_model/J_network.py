@@ -21,9 +21,9 @@ def create_model(input_shape: tuple):
     # Mynetwork
     model = Sequential()
     model.add(Flatten(input_shape=input_shape))  # 将输入展平为一维向量
-    model.add(Dense(28, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
-    model.add(Dense(20, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
-    model.add(Dense(14, activation='softmax'))  # 添加一个全连接层，输出14个类别的概率分布
+    model.add(Dense(32, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
+    model.add(Dense(16, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
+    model.add(Dense(2, activation='softmax'))  # 添加一个全连接层，输出14个类别的概率分布
     return model
 
 if __name__=='__main__':
