@@ -4,7 +4,9 @@ import microlite
 import io
 
 hello_world_model = bytearray(33000)
-model_file = io.open('model.tflite', 'rb')
+
+model_file = io.open('1024test.tflite', 'rb')
+print('test - two classes')
 model_file.readinto(hello_world_model)
 model_file.close()
 
@@ -46,7 +48,8 @@ class MyModel():
         #y = outputTensor.quantizeInt8ToFloat(y_quantized)
 
         #print ("%f,%f" % (current_input,y))
-        print (max_, posture)
+        print ("max: %f, posture: %d" % (max_, posture))
+        # print (max_, posture)
 
 
     def run_model(self):

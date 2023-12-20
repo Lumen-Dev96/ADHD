@@ -7,12 +7,19 @@ from mpu6050 import MPU6050
 # machine.freq(240000000)
 
 def fill_fifo():
-    processed_data = process_data(mpu1.get_data(True))
+    processed_data1 = process_data(mpu1.get_data(True))
+    processed_data2 = process_data(mpu2.get_data(True))
+    processed_data = processed_data1 + processed_data2
+    del processed_data1
+    del processed_data2
+    gc.collect()
+
     if len(fifo) >= FIFO_SIZE:
         tmp = fifo.pop(0)
         del tmp
         gc.collect()
     fifo.append(processed_data)
+    # fifo.append(processed_data1)
 
 
 def mpu_fifo_data():
@@ -62,10 +69,12 @@ if __name__ == '__main__':
             # 开始运行模型
             model = MyModel(fifo)
             model.run_model()
-            print('-----')
+            print('--- Model Start ---')
+            # print('DATA:')
+            # print(fifo)
             del model
             time.sleep(0.5)
             gc.collect()
-            print('-----')
+            print('--- Model End ----')
         
         
