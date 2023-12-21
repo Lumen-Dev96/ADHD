@@ -3,10 +3,10 @@
 import microlite
 import io
 
-hello_world_model = bytearray(33000)
+hello_world_model = bytearray(15000)
 
-model_file = io.open('1024test.tflite', 'rb')
-print('test - two classes')
+model_file = io.open('test100_1_S.tflite', 'rb')
+print('Test - two classes')
 model_file.readinto(hello_world_model)
 model_file.close()
 
@@ -38,12 +38,12 @@ class MyModel():
 
         max_ = float(0)
         posture = 0
-        for i in range(14):
+        for i in range(2):
             y = outputTensor.getValue(i)
             print(y)
             if y > max_:
                 max_ = y
-                posture = i + 1
+                posture = i
 
         #y = outputTensor.quantizeInt8ToFloat(y_quantized)
 
