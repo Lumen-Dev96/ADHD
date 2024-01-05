@@ -94,8 +94,10 @@ def publish_readSensorData(client, clientID):
             # print(len(rawData))
             if len(rawData) >= MQTT_SIZE:
                 print('Publishing Sensor Data...')
+                print('Sleeping... waiting for receive data')
+                time.sleep(3)
                 mqtt_msg = json.dumps(rawData)
-                client.publish(topic='Lumen',msg=mqtt_msg,qos=0)
+                client.publish(topic='AD2',msg=mqtt_msg,qos=0,retain=True)
                 del mqtt_msg
                 rawData = []
                 gc.collect()            
