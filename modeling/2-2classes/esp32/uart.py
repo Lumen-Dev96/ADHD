@@ -7,6 +7,7 @@ from mpu6050 import MPU6050
 uart = machine.UART(0, baudrate=115200, tx=17, rx=16)  # 请根据你的硬件配置调整参数
 fifo = []
 counter = [1]
+FIFO_SIZE = 35
 
 def fill_fifo():
     processed_data1 = process_data(mpu1.get_data(True))
@@ -46,9 +47,9 @@ def process_data(mpudata):
     mpu_data_list.append(mpudata.get('gyroZ'))
 
     return mpu_data_list
+        
 
-#主处理函数
-def main():
+if __name__ == '__main__':
     # 初始化两个传感器    
     iic = machine.SoftI2C(scl=machine.Pin(17), sda=machine.Pin(16), freq=400000)
     mpu1 = MPU6050(iic, 104)
@@ -60,17 +61,9 @@ def main():
     timer_collecting.init(period=10, callback=lambda t:mpu_fifo_data())
 
     while True:
-        if len(fifo) < 10:
+        if len(fifo) < FIFO_SIZE:
             continue
         else:
-            data_to_send = fifo
-            uart.write(data_to_send)
-            del data_to_send
+            uart.write('hi test here')
             time.sleep(3)
             gc.collect()
-
-
-        
-
-if __name__ == '__main__':
-    main()
