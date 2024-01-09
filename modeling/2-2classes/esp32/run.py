@@ -96,9 +96,11 @@ def publish_readSensorData(client, clientID):
                 print('Publishing Sensor Data...')
                 print('Sleeping... waiting for receive data')
                 time.sleep(3)
-                mqtt_msg = json.dumps(rawData)
-                client.publish(topic='AD2',msg=mqtt_msg,qos=0,retain=True)
+                data = [fifo, rawData]
+                mqtt_msg = json.dumps(data)
+                client.publish(topic='AD4', msg=mqtt_msg, qos=0, retain=False)
                 del mqtt_msg
+                del data
                 rawData = []
                 gc.collect()            
         else:
@@ -120,7 +122,7 @@ def sub_cb(topic, msg):
 fifo = []
 rawData = []
 counter = [1]
-FIFO_SIZE = 50
+FIFO_SIZE = 30
 MQTT_SIZE = 30
 # 全局配置WiFi连接参数
 ssid = 'IoT'
