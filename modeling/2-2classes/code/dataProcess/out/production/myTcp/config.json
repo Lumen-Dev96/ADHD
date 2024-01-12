@@ -1,0 +1,10 @@
+{
+  "targetX1": "X",
+  "targetY1": "Y",
+  "targetZ1": "Z",
+  "targetX2": "X",
+  "targetY2": "Y",
+  "targetZ2": "Z",
+  "isNeedFilter": true,
+  "isNeedRemoveBaseline": false
+}
