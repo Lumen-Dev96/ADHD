@@ -62,7 +62,9 @@ def process_data(mpudata1, mpudata2):
     gy2 = gy2_filter.get_G(mpudata2.get('gyroY'))
     gz2 = gz2_filter.get_G(mpudata2.get('gyroZ'))
 
-    mpu_data_list = [ax1, ay1, az1, gx1, gy1, gz1, ax2, ay2, az2, gx2, gy2, gz2]
+    seconds = time.time()
+
+    mpu_data_list = [seconds, ax1, ay1, az1, ax2, ay2, az2, gx1, gy1, gz1, gx2, gy2, gz2]
 
     # print('KALMAN Filter:', mpu_data_list)
 
