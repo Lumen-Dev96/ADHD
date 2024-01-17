@@ -5,7 +5,6 @@ import machine
 from mpu6050 import MPU6050
 from umqtt_simple import MQTTClient
 import _thread
-import sd_card
 import json
 import network
 import micropython
@@ -18,11 +17,13 @@ machine.freq(80000000)
 def fill_fifo():
     processed_data = process_data(mpu1.get_data(True), mpu2.get_data(True))
     
-    if len(fifo) >= FIFO_SIZE:
-        tmp = fifo.pop(0)
-        del tmp
-        gc.collect()
-    fifo.append(processed_data)
+    # Need it after collect data complete
+    # if len(fifo) >= FIFO_SIZE:
+    #     tmp = fifo.pop(0)
+    #     del tmp
+    #     gc.collect()
+    # fifo.append(processed_data)
+
     rawData.append(processed_data)
     del processed_data
     gc.collect()
@@ -77,7 +78,7 @@ def wifi_connect():
     wlan.active(False)#先进行wlan的清除
     wlan.active(True)#再激活 - !注意 這裡可能斷電重啟,激活wlan模塊需要穩定電壓
     start_time=time.time()#记录时间做超时判断
-    
+
     if not wlan.isconnected():
         print("connecting to network…")
         wlan.connect(ssid,password)#输入WiFi账号和密码
@@ -103,7 +104,7 @@ def publish_readSensorData(client, clientID):
     while True:
         # 周期数据采集
         global deviceGetTime, rawData
-        if flagUploadData == True:          
+        if flagUploadData == True:     
             #设置周期采集数据 单位s
             time.sleep(deviceGetTime)
             mpu_fifo_data()
@@ -111,12 +112,11 @@ def publish_readSensorData(client, clientID):
             # print(len(rawData))
             if len(rawData) >= MQTT_SIZE:
                 print('Publishing Sensor Data...')
-                print('Sleeping... waiting for receive data')
-                time.sleep(3)
-                mqtt_msg = json.dumps([fifo, rawData])
-                client.publish(topic='AD4', msg=mqtt_msg, qos=0, retain=False)
+                mqtt_msg = json.dumps(rawData)
+                client.publish(topic='AD7', msg=mqtt_msg, qos=0, retain=False)
                 del mqtt_msg
                 del rawData
+                # print('Writing Sensor Data into SD Card...')
                 gc.collect() 
                 rawData = []           
         else:
@@ -153,6 +153,7 @@ def main():
         #client.set_callback(sub_cb)  # 设置回调函数
         client.connect()  # 建立连接
         #client.subscribe(b"EditTime")  # 订阅EditTime主题
+        print('ALL Plugin memory:')
         micropython.mem_info()
 
 
@@ -172,6 +173,8 @@ def main():
 
         
         if flagThread == True:
+            vibrator.start([0.15])
+            print('Start collecting data')
             _thread.start_new_thread(publish_readSensorData, (client,clientID))# 开启线程发布主题及内容
             flagThread=False
 
@@ -201,9 +204,6 @@ if __name__ == '__main__':
     print('_________Start program_________')
     print(time.localtime())
 
-    print('memory check:')
-    micropython.mem_info()
-
 
     """    全局配置开始    """
     # 數據採集參數
@@ -211,7 +211,7 @@ if __name__ == '__main__':
     rawData = []
     counter = [1]
     FIFO_SIZE = 30
-    MQTT_SIZE = 30
+    MQTT_SIZE = 60
     # sd卡
     # sd = machine.SDCard(slot=1, width=4, freq=40_000_000)
     # 全局配置WiFi连接参数
