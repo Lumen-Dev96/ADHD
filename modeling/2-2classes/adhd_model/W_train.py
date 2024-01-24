@@ -38,9 +38,13 @@ y_test = np.load(npy_path + 'y_test_2.npy')
 
 model = create_model(input_shape=(window_size, channels))
 
-model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False), metrics='accuracy')
+# 分类
+# model.compile(optimizer='adam', loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False), metrics='accuracy')
 
-checkpoint = ModelCheckpoint(result_path + 'test.pb', monitor='val_loss', mode='min', save_best_only=True, verbose=1)
+# 回归loss改为MeanSquaredError
+model.compile(optimizer='adam', loss=tf.keras.losses.MeanSquaredError(), metrics='accuracy')
+
+checkpoint = ModelCheckpoint(result_path + 'test1_1.pb', monitor='val_loss', mode='min', save_best_only=True, verbose=1)
 model.fit(X_train, y_train, batch_size=32, epochs=epochs, validation_data=(X_val, y_val), callbacks=[checkpoint])
 
 #------------------------模型评价阶段----------------------------
@@ -56,8 +60,15 @@ print(f'Test Loss: {test_loss}')
 print(f'Test Accuracy: {test_accuracy}')
 # 使用训练好的模型进行预测
 y_pred = model.predict(X_test)
-# 将预测结果转换为类别标签
-y_pred_labels = np.argmax(y_pred, axis=1)
+
+# 将预测结果转换为类别标签，softmax为sigmoid函数，设定0.5为阈值
+y_pred [y_pred  > 0.5] = 1
+y_pred [y_pred  <= 0.5] = 0
+y_pred_labels = y_pred
+
+# # 将预测结果转换为类别标签，此处为index，适合分类问题
+# y_pred_labels = np.argmax(y_pred, axis=1)
+
 # 计算精确度、召回率和F1分数
 precision = precision_score(y_test, y_pred_labels, average='weighted')
 recall = recall_score(y_test, y_pred_labels, average='weighted')
@@ -86,7 +97,7 @@ labels = np.unique(np.concatenate((y_train, y_test)))
 # 不敢相信！center = 0！center：浮点数，可选参数。绘制有色数据时将色彩映射居中的值。 如果没有指定，则使用此参数将更改默认的cmap
 sns.heatmap(confusion_mat, annot=True, fmt='g', cmap ='Blues', center = 0, xticklabels=labels, yticklabels=labels)
 
-
+# 绘制混淆矩阵
 plt.xlabel('Predicted Labels')
 plt.ylabel('True Labels')
 plt.title('Confusion Matrix')
