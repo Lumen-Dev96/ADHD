@@ -12,7 +12,7 @@ window_size = 30
 result_path = './result/'
 
 # 加载模型
-model = load_model('../server/pb/test30_1.pb')
+model = load_model('../../public/pb/test30_1.pb')
 # 假设我们有一个新的数据集 X_new，它是一个形状为 (num_samples, num_features) 的二维数组
 new_data = pd.read_csv(r'../server/output.csv')
 

@@ -1,4 +1,3 @@
-import uos
 import utime
 from kalman import KALMAN
 import network
@@ -6,15 +5,16 @@ import time
 import machine
 from mpu6050 import MPU6050
 import _thread
-import other
 import sd_card
 import os
-import ntptime
+
+import gc
 try :
     import usocket as socket
 except:
     import socket
 from machine import RTC
+
 print("Finish the import library..")
 Command_List={
     "stop" : 'IMU will Stop all the measurement',
@@ -159,7 +159,7 @@ def Detecting_Data_in_Real_Time(mpu1,mpu2,client):
     Created_File=False
     data_file=None
     Data_Buffer= bytearray() # Byte array for faster excution and less memory occuption 
-    flash_config = {'threshold': 20, 'shakeTime': 300, 'isOpenGyro': False, 'autoStop': False, 'autoStopCnt': 30000,'mapX1': 'X', 'mapX1Direct': 1, 'mapY1': 'Y', 'mapY1Direct': 1, 'mapZ1': 'Z', 'mapZ1Direct': 1,'mapX2': 'X', 'mapX2Direct': 1, 'mapY2': 'Y', 'mapY2Direct': 1, 'mapZ2': 'Z', 'mapZ2Direct': 1}
+    flash_config = {'threshold': 20, 'shakeTime': 300, 'isOpenGyro': True, 'autoStop': False, 'autoStopCnt': 30000,'mapX1': 'X', 'mapX1Direct': 1, 'mapY1': 'Y', 'mapY1Direct': 1, 'mapZ1': 'Z', 'mapZ1Direct': 1,'mapX2': 'X', 'mapX2Direct': 1, 'mapY2': 'Y', 'mapY2Direct': 1, 'mapZ2': 'Z', 'mapZ2Direct': 1}
     #print("Real Time Thread is created")
     while True:
         if Created_File ==False and Real_Time_Detection==True:
@@ -172,7 +172,7 @@ def Detecting_Data_in_Real_Time(mpu1,mpu2,client):
             mpu_data2 = mpu2.get_data(flash_config['isOpenGyro'])
             Data = 'IMU1 start {0};{1};{2} end\r\n'.format(rtc.datetime(), mpu_data1, mpu_data2).encode('utf-8') # Use IMU1 to distinglish the where does the data comes from  
             Data_Buffer.extend(Data)
-            Number_of_data=Number_of_data+1
+            Number_of_data = Number_of_data+1
             if len(Data_Buffer) >= 8192:  # Adjust this size as needed
                 data_file.write(Data_Buffer)
                 data_file.flush()
@@ -247,18 +247,18 @@ if __name__ == '__main__':
     mpu2 = MPU6050(iic, 105)
     # iic: The I2C object used to communicate with the MPU6050 sensor.
     # addr: The I2C address of the MPU6050 sensor. 
-    ax1_filter = KALMAN()
-    ay1_filter = KALMAN()
-    az1_filter = KALMAN()
-    #gx1_filter = KALMAN()
-    #gy1_filter = KALMAN()
-    #gz1_filter = KALMAN()
-    ax2_filter = KALMAN()
-    ay2_filter = KALMAN()
-    az2_filter = KALMAN()
-    #gx2_filter = KALMAN()
-    #gy2_filter = KALMAN()
-    #gz2_filter = KALMAN()
+    # ax1_filter = KALMAN()
+    # ay1_filter = KALMAN()
+    # az1_filter = KALMAN()
+    # gx1_filter = KALMAN()
+    # gy1_filter = KALMAN()
+    # gz1_filter = KALMAN()
+    # ax2_filter = KALMAN()
+    # ay2_filter = KALMAN()
+    # az2_filter = KALMAN()
+    # gx2_filter = KALMAN()
+    # gy2_filter = KALMAN()
+    # gz2_filter = KALMAN()
     led = machine.Pin(19, machine.Pin.OUT, value=0)
     adc = machine.ADC(machine.Pin(34))
     connect_key = machine.Pin(18, machine.Pin.IN, machine.Pin.PULL_UP)
@@ -301,7 +301,7 @@ if __name__ == '__main__':
         try:
             client_socket.connect((server_ip, server_port))
             #print('Connected to server')
-            client_socket.send("Hello...I am IMU1")
+            client_socket.send("Hello...I am ESP32 with IMU1 and IMU2")
             #print("message sended .. ")
             Testified=False
         except OSError as e:
