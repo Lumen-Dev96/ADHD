@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Conv1D, \
-    LayerNormalization, BatchNormalization, Activation, MaxPooling1D, Flatten
+    LayerNormalization, BatchNormalization, Activation, MaxPooling1D, Flatten, Dropout
 
 # 定义模型
 def create_model(input_shape: tuple):
@@ -23,7 +23,7 @@ def create_model(input_shape: tuple):
     model.add(Flatten(input_shape=input_shape))  # 将输入展平为一维向量
     model.add(Dense(32, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
     model.add(Dense(16, activation='sigmoid'))  # 添加一个全连接层，输出14个类别的概率分布
-    model.add(Dense(2, activation='softmax'))  # 添加一个全连接层，输出14个类别的概率分布
+    model.add(Dense(1, activation='sigmoid'))  # 添加一个全连接层，回归
     return model
 
 if __name__=='__main__':
