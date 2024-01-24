@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from J_network import create_model
+from network import create_model
 import tensorflow as tf
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.optimizers import Adam
