@@ -1,1 +1,0 @@
-{'autoStopCnt': 30000, 'mapXDirect': 1, 'mapYDirect': 1, 'autoStop': False, 'mapY': 'Y', 'shakeTime': 300, 'mapX': 'X', 'mapZ': 'Z', 'mapZDirect': 1, 'threshold': 20, 'isOpenGyro': False}
