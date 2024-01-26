@@ -1,4 +1,4 @@
-from bokeh.plotting import figure
+from bokeh.plotting import figure, curdoc
 from bokeh.models import ColumnDataSource
 from bokeh.layouts import layout
 from bokeh.io import push_notebook, show, output_notebook
@@ -12,11 +12,14 @@ import datetime
 import socket
 import threading
 import re
+import matplotlib.pyplot as plt
+import time
+from math import *
 
 
 
 # 初始化數據/設定
-data_length = 60
+data_length = 30
 
 data_channels = 12
 
@@ -24,11 +27,13 @@ x = np.arange(data_length)
 
 y_data = [np.zeros(data_length) for _ in range(data_channels + 1)]
 
-grapId = 0
+grap_id = 0
 
 record_count = 0
 
 rawData = []
+
+topic = "AD1"
 
 max_data_count = 10000
 
@@ -39,18 +44,26 @@ trained_data_x = trained_data.iloc[:, 1:-1].values
 
 times_arr = []
 
+########### LOAD MODEL ###############
+# 初始化一个空列表来保存预测结果
+predictions = []
+model_path = '../../public/pb/test30_1.pb'
+x_record = 1
+model = load_model(model_path)
+########### LOAD MODEL ###############
+
 # 初始化 Bokeh 的 ColumnDataSource
 source1 = ColumnDataSource(data={'x': x, 'y': y_data[1]})
 source2 = ColumnDataSource(data={'x': x, 'y': y_data[2]})
 source3 = ColumnDataSource(data={'x': x, 'y': y_data[3]})
 
-source4 = ColumnDataSource(data={'x': x, 'y': y_data[7]})
-source5 = ColumnDataSource(data={'x': x, 'y': y_data[8]})
-source6 = ColumnDataSource(data={'x': x, 'y': y_data[9]})
+source4 = ColumnDataSource(data={'x': x, 'y': y_data[4]})
+source5 = ColumnDataSource(data={'x': x, 'y': y_data[5]})
+source6 = ColumnDataSource(data={'x': x, 'y': y_data[6]})
 
-source7 = ColumnDataSource(data={'x': x, 'y': y_data[4]})
-source8 = ColumnDataSource(data={'x': x, 'y': y_data[5]})
-source9 = ColumnDataSource(data={'x': x, 'y': y_data[6]})
+source7 = ColumnDataSource(data={'x': x, 'y': y_data[7]})
+source8 = ColumnDataSource(data={'x': x, 'y': y_data[8]})
+source9 = ColumnDataSource(data={'x': x, 'y': y_data[9]})
 
 source10 = ColumnDataSource(data={'x': x, 'y': y_data[10]})
 source11 = ColumnDataSource(data={'x': x, 'y': y_data[11]})
@@ -132,25 +145,27 @@ plots.append(plot7)
 
 grid = layout(plots, sizing_mode='scale_width')
 
-# 將繪圖添加到文檔
-# curdoc().add_root(plot1)
 
 # 在Jupyter Notebook中顯示
-output_notebook()
+# output_notebook()
 
-# handle = show(plot1, notebook_handle=True)
-show(grid, notebook_handle=True)
-# push_notebook(handle=handle)
+# show(grid, notebook_handle=True)
 
 
-########### LOAD MODEL ###############
-# 初始化一个空列表来保存预测结果
-predictions = []
-model_path = '../../public/pb/test30_1.pb'
-# model = tf.saved_model.load(model_path)
-x_record = 1
-model = load_model(model_path)
-########### LOAD MODEL ###############
+plt.ion() #开启interactive mode 成功的关键函数
+plt.figure(1)
+t = [0]
+t_now = 0
+m = [sin(t_now)]
+
+colors = ["orange", "purple", "green", "red", "blue", "grey"]
+
+plt.gca().set_prop_cycle(color=colors)
+plt.figure(figsize=(12.8, 7.2))
+
+
+
+
 
 
 def transformTimestamps(timestamp):
@@ -163,40 +178,44 @@ def transformTimestamps(timestamp):
 
 # 更新函數，每次呼叫時更新數據
 def update(message):
-    global x, y_data, grapId, x_record, rawData, record_count, max_data_count, stop_time_seconds
+    global x, y_data, grap_id, x_record, rawData, record_count, max_data_count, stop_time_seconds
     
-    # 模擬獲取新數據，這裡使用 randint 生成隨機數
-    new_data = np.random.randint(-10, 10, size = data_length)
-    
-    # 解碼 buffer 數據
-    # data = decode_buffer(message)
-
     # 解碼 MQTT 數據
     payload = message.payload.decode()
     data = json.loads(payload)
+
     
     mqData = np.array(data)
     # fifoData = np.array(data[1])
-    
+
+    if len(mqData) == 0:
+        print('No data')
+        return
+
+
     times = mqData[:, 0]
     channel1 = mqData[:, 1]
     channel2 = mqData[:, 2]
     channel3 = mqData[:, 3]
-    channel4 = mqData[:, 7]
-    channel5 = mqData[:, 8]
-    channel6 = mqData[:, 9]
-    channel7 = mqData[:, 4]
-    channel8 = mqData[:, 5]
-    channel9 = mqData[:, 6]
+    channel4 = mqData[:, 4]
+    channel5 = mqData[:, 5]
+    channel6 = mqData[:, 6]
+    channel7 = mqData[:, 7]
+    channel8 = mqData[:, 8]
+    channel9 = mqData[:, 9]
     channel10 = mqData[:, 10]
     channel11 = mqData[:, 11]
     channel12 = mqData[:, 12]
+
+    
 
     # 将时间戳转换为本地时间元组
     # new_times = np.vectorize(transformTimestamps)(times)
     # print('times:', new_times)
 
     rawData.append(mqData)
+
+
     
     # 使用模型进行预测
     ranges = np.array([[1.7, 2], [6.7, 7], [-7, -6.6], [-4, 2], [-2, 2], [-8, -3], [0, 0.3], [9, 9.3], [-4.3, -4], [0, 5], [-2, 2], [-6, -4]])
@@ -210,7 +229,7 @@ def update(message):
     dataForTrain = trained_data_x[record_count * data_length : record_count * data_length + data_length, :]
     dataForTrain = dataForTrain[np.newaxis, ...]
     print('transforming train data shape:', dataForTrain.shape)
-    print('data for train:', dataForTrain)
+    # print('data for train:', dataForTrain)
 
     # fifoData = np.delete(fifoData, 0, axis=1)
     # print('fifo;', fifoData)
@@ -240,36 +259,46 @@ def update(message):
     # source13.stream({'x':np.arange(x_record, x_record + 1), 'y':[prediction_label]})
 
 
-    
     # 更新數據源的數據
-    grapId += data_length
-    source1.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel1})
-    source2.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel2})
-    source3.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel3})
-    source4.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel4})
-    source5.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel5})
-    source6.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel6})
-    source7.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel7})
-    source8.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel8})
-    source9.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel9})
-    source10.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel10})
-    source11.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel11})
-    source12.stream({'x':np.arange(grapId, grapId + data_length), 'y':channel12})
+    grap_id += data_length
+    source1.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel1})
+    source2.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel2})
+    source3.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel3})
+    source4.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel4})
+    source5.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel5})
+    source6.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel6})
+    source7.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel7})
+    source8.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel8})
+    source9.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel9})
+    source10.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel10})
+    source11.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel11})
+    source12.stream({'x':np.arange(grap_id, grap_id + data_length), 'y':channel12})
     
     #push_notebook(handle=handle)
 
     push_notebook()
 
+    curdoc().add_next_tick_callback(show_plot)
+
     record_count = record_count + 1
 
     times_arr.append(times[0])
 
-    period = np.array(times_arr).ptp()
 
-    print('period:',  period)
-    if period > stop_time_seconds:
-        exportCSV()
+    # plt.clf() # 清空画布上的所有内容。此处不能调用此函数，不然之前画出的点，将会被清空。
+    t_now = record_count * 0.1
+    plt.plot(times, channel1, label='AX1')
+    plt.plot(times, channel2, label='AY1')
+    plt.plot(times, channel3, label='AZ1')
 
+
+    # plt.scatter(t_now, sin(t_now)) 
+
+    plt.pause(0.01)#注意此函数需要调用
+
+   
+def show_plot():
+    show(grid)
 
 
 
@@ -283,7 +312,7 @@ def exportCSV():
     timestamps = csvData[:, 0]
     ax1 = csvData[:, 1]
     ay1 = csvData[:, 2]
-    az1 = csvData[:, 3]
+    az1 = csvData[:, 0]
     gx1 = csvData[:, 7]
     gy1 = csvData[:, 8]
     gz1 = csvData[:, 9]
@@ -313,9 +342,9 @@ def on_connect(client, userdata, flags, rc):
         print("Failed to connect, return code %d\n", rc)
 
 def on_message(client, userdata, message):
-    update(message)
     print("Received data from esp32 via MQTT")
-    #print("Received message on topic %s: %s" % (message.topic, message.payload.decode()))
+    update(message)
+    # print("Received message on topic %s: %s" % (message.topic, message.payload.decode()))
 
 
 
@@ -330,7 +359,6 @@ def broadcast(command):
 
 
 def client_thread(client_socket, client_address):
-    global Buffer_of_IMU2
     global data_buffer
     """ Handle communication with a connected client. """
     print(f'New connection from {client_address}') # used to check the connection is created or not
@@ -339,20 +367,23 @@ def client_thread(client_socket, client_address):
         clients.append(client_socket)
     try:
         while True:  # Continuously receive data from the client
-            imu_data = client_socket.recv(16400).decode('utf-8')
-            if not imu_data :  # If no data is received, it means the client has disconnected
-                break
-            if "It is the end of File" in imu_data:
-                data_buffer.append(imu_data)
-                save_recieved_data(data = data_buffer, file_path = save_file_path)
-                data_buffer = []
-                print("End of Csv Conversion ")
-            elif Special_Command == "Real_Time_Detection":
-                # print('Receiving data:', imu_data)
-                decode_buffer([imu_data])
-                data_buffer.append(imu_data)
-            else:
-                print('message from ESP32:', imu_data)
+            imu_data = client_socket.recv(164000).decode('utf-8')
+
+            print(imu_data)
+            imu_json = json.loads(imu_data)
+
+            if imu_json['func'] == 'log':
+                print('message from ESP32: ', imu_json['msg'])
+            elif imu_json['func'] == 'visualization':
+                update(imu_json['data'])
+            # if not imu_data :  # If no data is received, it means the client has disconnected
+            #     break
+            # elif Special_Command == "Real_Time_Detection":
+            #     # print('Receiving data:', imu_data)
+            #     update([imu_data])
+            #     data_buffer.append(imu_data)
+            # else:
+
             # Here you could call broadcast() if needed
 
     except socket.error as e:  # Handle any exceptions that occur within the thread
@@ -366,12 +397,13 @@ def client_thread(client_socket, client_address):
 
 def connect_mqtt_server():
     # 连接MQTT代理
-    broker_address = "broker.emqx.io"
+    # broker_address = "broker.emqx.io"
+    broker_address = "127.0.0.1"
     # broker_address = "broker.mqttdashboard.com"
     # broker_address = "test.mosquitto.org"
     port = 1883
-    username = "test1"
-    password = "1234567"
+    username = "ESP32_Monitor"
+    password = "123"
 
     client = mqtt.Client()
     client.username_pw_set(username, password)
@@ -382,7 +414,6 @@ def connect_mqtt_server():
     client.connect(broker_address, port)
 
     # 订阅消息
-    topic = "AD7"
     client.subscribe(topic)
 
     client.loop_forever()
@@ -396,7 +427,7 @@ def broadcast_thread():
     """ Thread function for broadcasting commands at regular intervals. """
     while True:
         # Send a command to all clients
-        command_code = input('Input the command for IMU:\n 1 - List All Directory \n 2 - Update Local Time \n 3 - Print Local Time \n 4 - Start Collecting \n 5 - Stop Collecting \n 6 - Connect MQTT Server \n 0 - Quit \n')
+        command_code = input('Input the command for IMU:\n 1 - List All Directory \n 2 - Update Local Time \n 3 - Print Local Time \n 4 - Start Collecting \n 5 - Stop Collecting \n 6 - Connect MQTT Server \n 7 - Export CSV \n 0 - Quit \n')
         
         if command_code == '0':
             message = '{}: {}'.format(nickname, 'stop')
@@ -414,7 +445,7 @@ def broadcast_thread():
             broadcast(message)
         elif command_code == '4':
             Special_Command = "Real_Time_Detection"
-            message = '{}: {}'.format(nickname, 'Real_time_Detection_and_Save_as_' + datetime.datetime.now().strftime("%Y%m%d-1-%H_%M_%S_%f")[:-3])
+            message = '{}: {}'.format(nickname, 'Real_time_Detection_and_Save_as')
             broadcast(message)
         elif command_code == '5':
             if len(data_buffer) > 0 and len(Buffer_of_IMU2) > 0:
@@ -426,117 +457,20 @@ def broadcast_thread():
             broadcast(message)
         elif command_code == '6':
             connect_mqtt_server()
-        # elif "sd/mpuData/" in message:
-        #     save_file_path=message.split("/")[-1]
-        #     save_file_path=save_file_path.replace(".txt",".csv")
-        #     Running_IMU=save_file_path.split("_")[0]
-        #     Special_Command="Get_Content_from_"+Running_IMU
+        elif command_code == '7':
+            save_recieved_data(data = data_buffer, file_path = save_file_path)
         else:
             print('Invalid Command, please try again.')
             Special_Command = ""
             save_file_path = ""
             Running_IMU = None
 
-def decode_buffer(buffer):
-    Time_Stamp = []
-    Accel_X_of_detector_1  = []
-    Accel_Y_of_detector_1 = []
-    Accel_Z_of_detector_1  = []
-    Accel_X_of_detector_2 = []
-    Accel_Y_of_detector_2  = []
-    Accel_Z_of_detector_2  = []
 
-    Gory_X_of_detector_1  = []
-    Gory_Y_of_detector_1 = []
-    Gory_Z_of_detector_1  = []
-    Gory_X_of_detector_2 = []
-    Gory_Y_of_detector_2  = []
-    Gory_Z_of_detector_2  = []
-    recieved_data_count = 0
-    for data in range(len(buffer)):
-        #print(data[data])
-        # Use regex to find all data between 'start ' and ' end'
-        matches = re.findall(r'start (.*?) end', buffer[data], re.DOTALL)
-        # Print all matches
-        for match in matches:
-            #print(match)
-            Data_l=match.split(";")
-            Time_Data=Data_l[0]
-            Mpu_Data_1=Data_l[1]
-            Mpu_Data_2 = Data_l[2]
-            #print(match,Time_Data,Mpu_Data_1,Mpu_Data_2)
-            TL=Time_Data.split(",") # the list which store the time stamp
-            Year=str(int(TL[0].replace("(","")))
-            Month = str(int(TL[1].replace(" ", "")))
-            Day = str(int(TL[2].replace(" ", "")))
-            Hour = str(int(TL[4].replace(" ", "")))
-            Min = str(int(TL[5].replace(" ", "")))
-            Second = str(int(TL[6].replace(" ", "")))
-            Micro_Second = str(int(TL[7].replace(")", "").replace(" ","")))
-            Mpu_Data_1=Mpu_Data_1.replace("{","")
-            Mpu_Data_1 = Mpu_Data_1.replace("}", "")
-            Mpu_Data_2 = Mpu_Data_2.replace("{", "")
-            Mpu_Data_2 = Mpu_Data_2.replace("}", "")
-            Mpu_d1 = Mpu_Data_1.split(":")
-            Mpu_d2 = Mpu_Data_2.split(":")
-            time_stamp=Year+":"+Month+":"+Day+":"+Hour+":"+Min+":"+Second+":"+Micro_Second
-            # print(Mpu_d1)
-            # print(Mpu_d2)
-            accel_y_dector_1 = float(Mpu_d1[1].split(",")[0])
-            accel_y_dector_2 = float(Mpu_d2[1].split(",")[0])
-            accel_x_dector_1 = float(Mpu_d1[2].split(",")[0])
-            accel_x_dector_2 = float(Mpu_d2[2].split(",")[0])
-
-            accel_z_dector_1 = float(Mpu_d1[4].split(",")[0])
-            accel_z_dector_2 = float(Mpu_d2[4].split(",")[0])
-
-            gory_y_dector_1 = float(Mpu_d1[6].split(",")[0])
-            gory_y_dector_2 = float(Mpu_d2[6].split(",")[0])
-            gory_x_dector_1 = float(Mpu_d1[5].split(",")[0])
-            gory_x_dector_2 = float(Mpu_d2[5].split(",")[0])
-            gory_z_dector_1 = float(Mpu_d1[3].split(",")[0])
-            gory_z_dector_2 = float(Mpu_d2[3].split(",")[0])
-
-            Accel_Y_of_detector_1.append(accel_y_dector_1)
-            Accel_X_of_detector_1.append(accel_x_dector_1)
-            Accel_Z_of_detector_1.append(accel_z_dector_1)
-            Accel_Y_of_detector_2.append(accel_y_dector_2)
-            Accel_Z_of_detector_2.append(accel_z_dector_2)
-            Accel_X_of_detector_2.append(accel_x_dector_2)
-            Gory_Y_of_detector_1.append(gory_y_dector_1)
-            Gory_X_of_detector_1.append(gory_x_dector_1)
-            Gory_Z_of_detector_1.append(gory_z_dector_1)
-            Gory_Y_of_detector_2.append(gory_y_dector_2)
-            Gory_Z_of_detector_2.append(gory_z_dector_2)
-            Gory_X_of_detector_2.append(gory_x_dector_2)
-            Time_Stamp.append(time_stamp)
-            recieved_data_count = recieved_data_count + 1
-
-            print(time_stamp)
-            
-
-    # print("We have handle ...",recieved_data_count," data")
-    IMU_Detected_Data = pd.DataFrame()
-    IMU_Detected_Data['Time_Stamp'] = Time_Stamp
-    IMU_Detected_Data['Accel_X_of_Detector1'] = Accel_X_of_detector_1
-    IMU_Detected_Data['Accel_Y_of_Detector1'] = Accel_Y_of_detector_1
-    IMU_Detected_Data['Accel_Z_of_Detector1'] = Accel_Z_of_detector_1
-    IMU_Detected_Data['Accel_X_of_Detector2'] = Accel_X_of_detector_2
-    IMU_Detected_Data['Accel_Y_of_Detector2'] = Accel_Y_of_detector_2
-    IMU_Detected_Data['Accel_Z_of_Detector2'] = Accel_Z_of_detector_2
-    
-    IMU_Detected_Data['Gory_X_of_Detector1'] = Gory_X_of_detector_1
-    IMU_Detected_Data['Gory_Y_of_Detector1'] = Gory_Y_of_detector_1
-    IMU_Detected_Data['Gory_Z_of_Detector1'] = Gory_Z_of_detector_1
-    IMU_Detected_Data['Gory_X_of_Detector2'] = Gory_X_of_detector_2
-    IMU_Detected_Data['Gory_Y_of_Detector2'] = Gory_Y_of_detector_2
-    IMU_Detected_Data['Gory_Z_of_Detector2'] = Gory_Z_of_detector_2
-
-    return IMU_Detected_Data
 
 def save_recieved_data(data ,file_path = None):
     IMU_Detected_Data = decode_buffer(data)
     IMU_Detected_Data.to_csv(file_path, index=False)
+    print('export csv success')
 
     return
 
@@ -562,41 +496,10 @@ Recieved_Data_in_Real_Time =[]
 data_buffer =[]
 Buffer_of_IMU2 =[]
 Running_IMU = None
-save_file_path = "../../public/data/csv/"
+save_file_path = "../../public/data/csv/validation.csv"
 # Create a TCP/IP socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
+connect_mqtt_server()
 
-'''
-"stop" : 'IMU will Stop all the measurement',
-"listdirectory": 'List all the file within the SD card',
-"invalid commnad":"Recieve some invalid command ",
-"Detect_And_Save_as":'Save all the detection to the given file',
-"Update_Local_Time_as":"Reset the time stamp of the IMU..",
-"Check_IMU_Time":"Check the clock reading of the IMU...",
-"Real_time_Detection_and_Save_as":"Save all the detection to the given file and send it in real time",
-'''
-
-try:
-    # Bind the socket to the server address and start listening for incoming connections
-    server_socket.bind((server_ip, server_port))
-    server_socket.listen()
-    print('Server listening on port', server_port)
-
-    # Start the broadcasting thread
-    nickname = input("User Name:") # Check the bocardcasting on or not
-    write_thread = threading.Thread(target = broadcast_thread)
-    write_thread.start()
-
-    while True:
-        # Accept new connections from clients
-        client_sock, client_addr = server_socket.accept()
-        # Start a new thread for each connected client
-        threading.Thread(target = client_thread, args=(client_sock, client_addr)).start()
-
-except KeyboardInterrupt:  # Allow the server to be stopped with Ctrl+C
-    print('Server is shutting down')
-finally:
-    # Close the server socket and all client sockets before exiting
-    close_sockets()
 

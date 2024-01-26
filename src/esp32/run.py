@@ -215,14 +215,15 @@ if __name__ == '__main__':
     # sd卡
     # sd = machine.SDCard(slot=1, width=4, freq=40_000_000)
     # 全局配置WiFi连接参数
-    ssid = 'IoT'
-    password = 'eduhk+IoT+2018'
-    # ssid = 'top'
-    # password = 'lzj61271056'
+    # ssid = 'IoT'
+    # password = 'eduhk+IoT+2018'
+    ssid = 'top'
+    password = 'lzj61271056'
     # 全局配置mqtt连接参数
-    mqttHost = "broker.emqx.io" # MQTT代理服务器地址 这里使用公用的MQTT服务器做测试
+    # mqttHost = "broker.emqx.io" # MQTT代理服务器地址 这里使用公用的MQTT服务器做测试
     # mqttHost = "broker.mqttdashboard.com"
     # mqttHost = "test.mosquitto.org"
+    mqttHost = "172.20.10.7"
     mqttPort = 1883 #端口
     keepalive = 60 #保活时间 单位s
     clientID = 1
