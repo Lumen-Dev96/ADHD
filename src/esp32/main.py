@@ -209,7 +209,7 @@ def main():
         mqtt_client.subscribe(b"Command")  # 订阅主题
 
         if not is_collecting:
-            # vibrator.start([0.15])
+            vibrator.start([0.15])
             start_collect()
             
 
@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
     vibrator = VIBRATOR(machine.Pin(21, machine.Pin.OUT, value=0))
     
-    flash_config = {'threshold': 20, 'shakeTime': 300, 'isOpenGyro': False, 'autoStop': False, 'autoStopCnt': 30000,
+    flash_config = {'threshold': 20, 'shakeTime': 300, 'isOpenGyro': True, 'autoStop': False, 'autoStopCnt': 30000,
                     'mapX': 'X', 'mapXDirect': 1, 'mapY': 'Y', 'mapYDirect': 1, 'mapZ': 'Z', 'mapZDirect': 1}
     
     is_collecting = False
@@ -251,13 +251,13 @@ if __name__ == '__main__':
     rawData = []
 
     BATCH_SIZE = 30
-    # SERVER_IP = '172.19.251.201' 
-    SERVER_IP = '172.20.10.7' # My PC ip 
+    SERVER_IP = '172.19.251.201'
+    # SERVER_IP = '172.20.10.7' # My PC ip 
     SERVER_PORT = 10000  # The port the server is listening on
-    # SSID = 'IoT'
-    # SSID_PASS = 'eduhk+IoT+2018'
-    SSID = 'top'
-    SSID_PASS = 'lzj61271056'
+    SSID = 'IoT'
+    SSID_PASS = 'eduhk+IoT+2018'
+    # SSID = 'top'
+    # SSID_PASS = 'lzj61271056'
 
     MQTT_PORT = 1883 #端口
     MQTT_KEEP_ALIVE = 60 #保活时间 单位s
