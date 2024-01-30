@@ -187,7 +187,6 @@ def wifi_connect():
 # 主题订阅处理函数
 def sub_cb(topic, msg):
     #print(topic, msg)
-    # 申明全局变量
     global deviceGetTime
     if topic.decode("utf-8") == "Command" :
         #data = json.loads(msg)
