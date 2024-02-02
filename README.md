@@ -21,7 +21,7 @@ conda with python 3.9
 ```
 cd src/client
 
-conda install --yes --file requirements.txt
+pip install -r requirements.txt
 ```
 
 or you can install the packages manually as following:
@@ -34,6 +34,7 @@ jupyter notebook
 tensorflow
 jupyter_bokeh
 paho-mqtt
+numpy
 ```
 
 ### Configuration
@@ -65,5 +66,19 @@ model:
 ```
 cd /src/client
 jupyter notebook monitor.py
+```
+
+### Export dependencies
+
+recommend to use `pipreqs`, you can install via:
+
+```
+pip install pipreqs
+```
+
+export command:
+
+```
+pipreqs ./src/client
 ```
 
