@@ -51,14 +51,16 @@ mqtt:
   password: '123'
   topic: AD1
 data:
-  length: 30
+  length: 50
   channels: 12
-  window_size: 30
+  window_size: 100
   train_data_path: ../../public/data/csv/
+  normalize: true
 env:
   test: true
+  export_csv: false
 model:
-  pb_path: ../../public/pb/new_test30_1.pb
+  pb_path: ../../public/pb/n2_100_1.pb
 ```
 
 ### Compile and Hot-Reload for Development
