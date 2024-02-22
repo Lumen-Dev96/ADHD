@@ -187,11 +187,12 @@ def wifi_connect():
 # 主题订阅处理函数
 def sub_cb(topic, msg):
     #print(topic, msg)
-    global deviceGetTime
     if topic.decode("utf-8") == "Command" :
-        #data = json.loads(msg)
-        print ("data['deviceGetTime']: ", json.loads(msg)['deviceGetTime'])
-        deviceGetTime = json.loads(msg)['deviceGetTime']
+        command = json.loads(msg)
+        print ("Received command: ", command)
+        if command == 'vibrator':
+            vibrator.start([0.12, 0.15])
+
    
 
 
