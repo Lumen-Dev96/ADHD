@@ -246,7 +246,7 @@ if __name__ == '__main__':
     timer_collecting = machine.Timer(0)
 
     collecting_cnt = 0 # 紀錄已採集的數據量
-    data_cnt = 0 # 紀錄當前批次的數據集大小, 同於觸法發布數據後的歸0處理, 避免內存不夠
+    data_cnt = 0 # 紀錄當前批次的數據集大小, 用於觸發發布數據後的歸0處理, 避免內存不夠
     rawData = []
 
     BATCH_SIZE = 50
