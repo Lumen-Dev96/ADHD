@@ -22,25 +22,25 @@ def all_mpu_init():
 def collecting(t):
     global data_cnt, collecting_cnt, rawData
     if mpu_is_ok:
-        mpu_data1 = mpu1.get_data(flash_config['isOpenGyro'])
-        mpu_data2 = mpu2.get_data(flash_config['isOpenGyro'])
+        mpu_data1 = mpu1.get_data(is_open_gyro)
+        mpu_data2 = mpu2.get_data(is_open_gyro)
 
         # # 坐标轴和方向映射转换
         rawData.append([
-            # str(rtc.datetime()),
-            mpu_data1['accel' + flash_config['mapX']] * flash_config['mapXDirect'],
-            mpu_data1['accel' + flash_config['mapY']] * flash_config['mapYDirect'],
-            mpu_data1['accel' + flash_config['mapZ']] * flash_config['mapZDirect'],
-            mpu_data1['gyro' + flash_config['mapX']] * flash_config['mapXDirect'],
-            mpu_data1['gyro' + flash_config['mapY']] * flash_config['mapYDirect'],
-            mpu_data1['gyro' + flash_config['mapZ']] * flash_config['mapZDirect'],
+            str(rtc.datetime()),
+            mpu_data1['accelX'],
+            mpu_data1['accelY'],
+            mpu_data1['accelZ'],
+            mpu_data1['gyroX'],
+            mpu_data1['gyroY'],
+            mpu_data1['gyroZ'],
 
-            mpu_data2['accel' + flash_config['mapX']] * flash_config['mapXDirect'],
-            mpu_data2['accel' + flash_config['mapY']] * flash_config['mapYDirect'],
-            mpu_data2['accel' + flash_config['mapZ']] * flash_config['mapZDirect'],
-            mpu_data2['gyro' + flash_config['mapX']] * flash_config['mapXDirect'],
-            mpu_data2['gyro' + flash_config['mapY']] * flash_config['mapYDirect'],
-            mpu_data2['gyro' + flash_config['mapZ']] * flash_config['mapZDirect']
+            mpu_data2['accelX'],
+            mpu_data2['accelY'],
+            mpu_data2['accelZ'],
+            mpu_data2['gyroX'],
+            mpu_data2['gyroY'],
+            mpu_data2['gyroZ']
         ])
 
         # print(rawData)
@@ -55,7 +55,7 @@ def collecting(t):
         if collecting_cnt % 1000 == 0:
             print(collecting_cnt, ' data collected')
 
-        if flash_config['autoStop'] and collecting_cnt >= flash_config['autoStopCnt']:
+        if auto_stop and collecting_cnt >= auto_stop_cnt:
             stop_collect()
             vibrator.start([0.12, 0.15, 0.12])
             time.sleep(0.5)
@@ -199,8 +199,8 @@ def sub_cb(topic, msg):
 def main():
 
     # 看門狗
-    # wdt = machine.WDT(timeout=10000)
-    # wdt.feed()
+    wdt = machine.WDT(timeout=10000)
+    wdt.feed()
 
     if wifi_connect():
 
@@ -213,9 +213,10 @@ def main():
             start_collect()
             
 
-        # while True:
-            # wdt.feed()
-        mqtt_client.wait_msg()
+        while True:
+            wdt.feed()
+            mqtt_client.check_msg()
+            time.sleep_ms(1000)
 
 
         
@@ -235,22 +236,23 @@ if __name__ == '__main__':
 
     vibrator = VIBRATOR(machine.Pin(21, machine.Pin.OUT, value=0))
     
-    flash_config = {'threshold': 20, 'shakeTime': 300, 'isOpenGyro': True, 'autoStop': False, 'autoStopCnt': 30000,
-                    'mapX': 'X', 'mapXDirect': 1, 'mapY': 'Y', 'mapYDirect': 1, 'mapZ': 'Z', 'mapZDirect': 1}
+    is_open_gyro = True
+    auto_stop = True
+    auto_stop_cnt = 30000
     
     is_collecting = False
 
     mpu_is_ok = False
     sdcard_is_ok = False
     deviceGetTime = 10 #设备周期采集时间
-    # rtc = machine.RTC()
+    rtc = machine.RTC()
     timer_collecting = machine.Timer(0)
 
     collecting_cnt = 0 # 紀錄已採集的數據量
     data_cnt = 0 # 紀錄當前批次的數據集大小, 用於觸發發布數據後的歸0處理, 避免內存不夠
     rawData = []
 
-    BATCH_SIZE = 25
+    BATCH_SIZE = 50
     # SERVER_IP = '172.19.251.201'
     SERVER_IP = '172.19.252.224'
     # SERVER_IP = '172.20.10.7' # My PC ip 
@@ -265,7 +267,7 @@ if __name__ == '__main__':
     MQTT_USER_PASS = 'pwd123456' #客户端用户密码
     mqtt_client = MQTTClient(MQTT_CLIENT_ID, SERVER_IP, MQTT_PORT, MQTT_USER_NAME, MQTT_USER_PASS, MQTT_KEEP_ALIVE)
     
-    # print(str(rtc.datetime()))
+    print(str(rtc.datetime()))
     """    全局配置结尾    """
 
     # do not used sd card, it takes too much memory        
