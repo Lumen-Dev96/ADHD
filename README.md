@@ -49,7 +49,7 @@ mqtt:
   port: 1883
   username: ESP32_Monitor
   password: '123'
-  topic: AD1
+  topic: ADHD
 data:
   length: 50
   channels: 12
@@ -57,10 +57,12 @@ data:
   train_data_path: ../../public/data/csv/
   normalize: true
 env:
-  test: true
-  export_csv: false
+  test: false
+  export_csv: true
 model:
-  pb_path: ../../public/pb/n2_100_1.pb
+  pb_path: ../../public/pb/n2_100_1_newest.pb
+device:
+  enable_shock: false
 ```
 
 ### Compile and Hot-Reload for Development
