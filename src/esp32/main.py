@@ -1,11 +1,12 @@
 import network
-import time
+import utime
 import machine
 from mpu6050 import MPU6050
 import _thread
 from vibrator import VIBRATOR
 import gc
 import ujson
+import uarray
 from umqtt_simple import MQTTClient
 
 
@@ -27,7 +28,7 @@ def collecting(t):
 
         # # 坐标轴和方向映射转换
         rawData.append([
-            str(rtc.datetime()),
+            utime.time(),
             mpu_data1['accelX'],
             mpu_data1['accelY'],
             mpu_data1['accelZ'],
@@ -42,6 +43,23 @@ def collecting(t):
             mpu_data2['gyroY'],
             mpu_data2['gyroZ']
         ])
+
+        # uarray.array('f', [
+        #     utime.time(),
+        #     mpu_data1['accelX'],
+        #     mpu_data1['accelY'],
+        #     mpu_data1['accelZ'],
+        #     mpu_data1['gyroX'],
+        #     mpu_data1['gyroY'],
+        #     mpu_data1['gyroZ'],
+
+        #     mpu_data2['accelX'],
+        #     mpu_data2['accelY'],
+        #     mpu_data2['accelZ'],
+        #     mpu_data2['gyroX'],
+        #     mpu_data2['gyroY'],
+        #     mpu_data2['gyroZ']
+        # ])
 
         # print(rawData)
 
@@ -58,11 +76,11 @@ def collecting(t):
         if auto_stop and collecting_cnt >= auto_stop_cnt:
             stop_collect()
             vibrator.start([0.12, 0.15, 0.12])
-            time.sleep(0.5)
+            utime.sleep_ms(500)
     else:
         stop_collect()
         vibrator.start([0.12, 0.15, 0.12])
-        time.sleep(0.5)
+        utime.sleep(500)
 
 
 
@@ -72,7 +90,7 @@ def publish_sensor_data(client, clientID):
     while is_collecting:
         if len(rawData) > 0 and len(rawData) % BATCH_SIZE == 0:
             data_cnt = 0
-            client.publish(topic='AD1', msg=ujson.dumps(rawData), qos=0, retain=False)
+            client.publish(topic='ADHD', msg=ujson.dumps(rawData), qos=0, retain=False)
             rawData.clear()
             gc.collect()
         pass
@@ -96,7 +114,7 @@ def start_collect():
     else:
         machine.freq(80000000)
         print('mpu not loaded')
-        time.sleep(0.5)
+        utime.sleep(500)
 
 def stop_collect():
     global is_collecting, sdcard_is_ok
@@ -106,7 +124,7 @@ def stop_collect():
     led.off()
     is_collecting = False
     print('Stop Collecting... We have collected', data_cnt)
-    time.sleep_ms(150)
+    utime.sleep_ms(150)
 
 
 # Handling Command from remote control
@@ -163,18 +181,18 @@ def wifi_connect():
     wlan = network.WLAN(network.STA_IF)#STA模式
     wlan.active(False)#先进行wlan的清除
     wlan.active(True)#再激活 - !注意 這裡可能斷電重啟,激活wlan模塊需要穩定電壓
-    start_time = time.time()#记录时间做超时判断
+    start_time = utime.time()#记录时间做超时判断
 
     if not wlan.isconnected():
         print("connecting to network…")
         wlan.connect(SSID, SSID_PASS)#输入WiFi账号和密码
         while not wlan.isconnected():
             led.value(1)
-            time.sleep_ms(300)
+            utime.sleep_ms(300)
             led.value(0)
-            time.sleep_ms(300)
+            utime.sleep_ms(300)
             #超时判断，30s未连接成功判定为超时
-            if time.time() - start_time > 30:
+            if utime.time() - start_time > 30:
                 print("WiFi Connect TimeOut!")
                 break
     
@@ -184,6 +202,11 @@ def wifi_connect():
         return True
        
 
+#日誌主题发布函数
+def log(message):    
+    mqtt_client.publish(topic='Log', msg=ujson.dumps(message), qos=0, retain=False)
+    print('Log:', message)
+
 # 主题订阅处理函数
 def sub_cb(topic, msg):
     #print(topic, msg)
@@ -192,6 +215,22 @@ def sub_cb(topic, msg):
         print ("Received command: ", command)
         if command == 'vibrator':
             vibrator.start([0.12, 0.15])
+            log('Hyper action detected.')
+        elif command == 'start_collect':
+            if not is_collecting:
+                vibrator.start([0.15])
+                start_collect()
+                log('Start collecting...')
+            else:
+                log('Is collecting, can not start again.')
+        elif command == 'stop_collect':
+            if not is_collecting:
+                log('No collecting thread.')
+            else:
+                stop_collect()
+                log('Stop collecting....')
+
+            
 
    
 
@@ -199,8 +238,8 @@ def sub_cb(topic, msg):
 def main():
 
     # 看門狗
-    wdt = machine.WDT(timeout=10000)
-    wdt.feed()
+    # wdt = machine.WDT(timeout=20000)
+    # wdt.feed()
 
     if wifi_connect():
 
@@ -214,9 +253,9 @@ def main():
             
 
         while True:
-            wdt.feed()
-            mqtt_client.check_msg()
-            time.sleep_ms(1000)
+            # wdt.feed()
+            mqtt_client.wait_msg()
+            utime.sleep_ms(1000)
 
 
         
@@ -237,7 +276,7 @@ if __name__ == '__main__':
     vibrator = VIBRATOR(machine.Pin(21, machine.Pin.OUT, value=0))
     
     is_open_gyro = True
-    auto_stop = True
+    auto_stop = False
     auto_stop_cnt = 30000
     
     is_collecting = False
@@ -252,7 +291,7 @@ if __name__ == '__main__':
     data_cnt = 0 # 紀錄當前批次的數據集大小, 用於觸發發布數據後的歸0處理, 避免內存不夠
     rawData = []
 
-    BATCH_SIZE = 50
+    BATCH_SIZE = 25
     # SERVER_IP = '172.19.251.201'
     SERVER_IP = '172.19.252.224'
     # SERVER_IP = '172.20.10.7' # My PC ip 
