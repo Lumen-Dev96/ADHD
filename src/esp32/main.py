@@ -291,7 +291,7 @@ if __name__ == '__main__':
     data_cnt = 0 # 紀錄當前批次的數據集大小, 用於觸發發布數據後的歸0處理, 避免內存不夠
     rawData = []
 
-    BATCH_SIZE = 25
+    BATCH_SIZE = 50
     # SERVER_IP = '172.19.251.201'
     SERVER_IP = '172.19.252.224'
     # SERVER_IP = '172.20.10.7' # My PC ip 
