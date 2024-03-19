@@ -7,3 +7,4 @@ tensorflow==2.10.0
 jupyter-bokeh==3.0.7
 notebook==7.0.6
 ujson==5.9.0
+uarray==0.8.8
