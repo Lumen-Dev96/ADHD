@@ -1,8 +1,0 @@
-run_erl [46584] Tue Mar 19 13:29:45 2024
-Args before exec of shell:
-run_erl [46584] Tue Mar 19 13:29:45 2024
-argv[0] = sh
-run_erl [46584] Tue Mar 19 13:29:45 2024
-argv[1] = -c
-run_erl [46584] Tue Mar 19 13:29:45 2024
-argv[2] = exec "/Users/minnyqiu/Documents/ADHD/server/emqx/bin/emqx" "console"
