@@ -1,0 +1,8 @@
+{application,emqx_postgresql,
+             [{description,"EMQX PostgreSQL Database Connector"},
+              {vsn,"0.1.2"},
+              {registered,[]},
+              {applications,[kernel,stdlib,epgsql,emqx_resource]},
+              {env,[]},
+              {modules,[emqx_postgresql,emqx_postgresql_connector_schema]},
+              {links,[]}]}.
