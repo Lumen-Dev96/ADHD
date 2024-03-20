@@ -25,5 +25,7 @@
     ],
     "files.associations": {
         ".mpyproject.json": "jsonc"
-    }
+    },
+    "editor.fontLigatures": false,
+    "editor.fontFamily": "MesloLGM NF"
 }
